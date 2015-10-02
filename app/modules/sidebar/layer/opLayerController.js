@@ -4,7 +4,7 @@
 
 angular.module('opApp').controller('opLayerController',
     function ($rootScope, $scope, $location, $timeout, $window, moment, toaster, L, opConfig, opLayerService, opWebMapService,
-              opWebFeatureService, opStateService, opFilterService, opExportService, opPopupWindow, $log, $compile) {
+              opWebFeatureService, opStateService, opFilterService, opExportService, opPopupWindow, $log) {
         'use strict';
 
         String.prototype.hashCode = function(){
@@ -180,18 +180,29 @@ angular.module('opApp').controller('opLayerController',
         $scope.leafletGroup = null;
         $scope.layerControl = null;
 
-        $scope.transparencyHtml = "test";
+        // code not being used right now for attempting to put a slider in a popover
+        //$scope.tPopoverOpened = false;
+        //
+        //$scope.closePopover = function() {
+        //    $scope.tPopoverOpened = !$scope.tPopoverOpened;
+        //    console.log('closing');
+        //};
+        //
+        //$scope.onTransparencyChange = function(layer) {
+        //    $scope.$broadcast('rzSliderForceRender');
+        //    if(layer.active) {
+        //        // translate from scale 0-100 to 0-1
+        //        var value = layer.transparencySlider.value * 0.01;
+        //        console.log('New transparency value for ' + layer.name + ' is : ' + value);
+        //        $scope.setTransparency(layer, value);
+        //    }
+        //};
 
-        $scope.transparencySlider = {
-            floor: 0,
-            ceil: 10,
-            value: 9
-        };
-
-        $scope.sliderTranslate = function(value) {
-            return (value*10) + '%';
-        };
-
+        /**
+         * Updates the layer's transparency value dynamically
+         * @param layer full layer object
+         * @param value (between 0 to 1 corresponding to 0% or 100%)
+         */
         $scope.setTransparency = function(layer, value) {
             layer.mapHandle.setOpacity(value);
         };
@@ -379,7 +390,8 @@ angular.module('opApp').controller('opLayerController',
 
         $scope.datasetStateChanged = function (layerUid) {
             var layer = getLayerByUid($scope.layers, layerUid);
-            if (layer.active && layer.mapHandle !== null && layer.mapHandle !== undefined){
+            // layer.active gets set by checkbox before this code executes
+            if (!layer.active && layer.mapHandle !== null && layer.mapHandle !== undefined){
                 $log.log('disabling already enabled layer: \'' + layer.name + '\'');
                 removeLayer(layer);
 
@@ -497,7 +509,7 @@ angular.module('opApp').controller('opLayerController',
             if (!$scope.map.hasLayer(layer.mapHandle)) {
                 layer.mapHandle.on('loading', updateLayerLoadStart);
                 layer.mapHandle.on('load', updateLayerLoadComplete);
-                layer.opacity = 1;
+
                 $scope.map.addLayer(layer.mapHandle);
 
                 opStateService.addDataset(layer.server + ':' + layer.workspace + ':' + layer.name);
@@ -625,6 +637,14 @@ angular.module('opApp').controller('opLayerController',
                     var hash = hashString.hashCode();
                     layer.uid = hash;
                     layer.legendGraphic = opWebMapService.getLegendGraphicUrl(serverName, layer.workspace + ':' + layer.name);
+
+                    // removed due to not using a transparency slider yet
+                    // lets add transparency slider info to each as well
+                    //layer.transparencySlider = {
+                    //    value: 50,
+                    //    floor: 0,
+                    //    ceil: 100
+                    //}
                 }
                 groupLayers(layers, opConfig.recognizedTags);
                 $scope.tags = $scope.tags.concat($scope.layerGroups.getGroupTags());
@@ -718,7 +738,4 @@ angular.module('opApp').controller('opLayerController',
                     return _.contains(opStateService.getDatasets(), l.server + ':' + l.workspace + ':' + l.name);
                 }));
         });
-
-
-
     });
