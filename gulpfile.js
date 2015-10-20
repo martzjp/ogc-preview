@@ -196,8 +196,14 @@ gulp.task('bump', function() {
     .pipe(bump({version: newVer}))
     .pipe(gulp.dest('./'));
 
+    var newVerBuild = '';
+    if(process.env.BUILD_NUMBER)
+    {
+      newVerBuild = newVer + '-' + process.env.BUILD_NUMBER; 
+    }
+
     gulp.src('./app/config/version.json')
-    .pipe(bump({version: newVer + '-' + process.env.BUILD_NUMBER}))
+    .pipe(bump({version: newVerBuild}))
     .pipe(gulp.dest('./app/config'));
 });
 
